@@ -1,0 +1,14 @@
+{
+    "manifest_version": 3,
+    "name": "Smart Bookmark Saver",
+    "version": "1.0",
+    "description": "Save bookmarks with custom sections",
+    "permissions": ["storage", "bookmarks", "tabs"],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": "assets/bookmark.png"
+    },
+    "icons": {
+      "128": "assets/bookmark.png"
+    }
+  }

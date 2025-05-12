@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Smart Bookmark Saver</title>
+        <style>
+          body {
+            width: 300px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+          }
+          input, select, button {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+          }
+          button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+          }
+          button:hover {
+            background-color: #45a049;
+          }
+          #bookmarkList {
+            max-height: 200px;
+            overflow-y: auto;
+          }
+          .bookmark-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+          }
+        </style>
+      </head>
+<body>
+  <h3>Smart Bookmark Saver</h3>
+  <!-- <input type="text" id="bookmarkUrl" placeholder="Current page URL" readonly> -->
+  <input type="text" id="bookmarkTitle" placeholder="Bookmark Title">
+  <select id="sectionSelect">
+    <option value="">Select Section</option>
+    <option value="new">New Section...</option>
+  </select>
+  <input type="text" id="newSection" placeholder="New Section Name" style="display: none;">
+  <button id="saveBookmark">Save Bookmark</button>
+  <h4>Saved Bookmarks</h4>
+  <div id="bookmarkList"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
