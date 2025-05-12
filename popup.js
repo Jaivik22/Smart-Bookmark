@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBookmarkBtn = document.getElementById('saveBookmark');
     const bookmarkList = document.getElementById('bookmarkList');
     let currentUrl = '';
-    let currentTitle = '';
   
     // Use chrome or browser for cross-browser compatibility
     const browserAPI = window.browser || window.chrome;
@@ -48,13 +47,40 @@ browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           bookmarks.forEach(bookmark => {
             const bookmarkDiv = document.createElement('div');
             bookmarkDiv.className = 'bookmark-item';
-            bookmarkDiv.innerHTML = `<a href="${bookmark.url}" target="_blank">${bookmark.title}</a>`;
+            bookmarkDiv.innerHTML = \`
+            <a href="${bookmark.url}" target="_blank">${bookmark.title}</a>
+            <button class="delete-btn" data-section="${section}" data-index="${index}">Delete</button>
+          \`;
             sectionDiv.appendChild(bookmarkDiv);
           });
           bookmarkList.appendChild(sectionDiv);
         });
+        // Add event listeners for delete buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const section = e.target.dataset.section;
+          const index = parseInt(e.target.dataset.index);
+          deleteBookmark(section, index);
+        });
+      });
       });
     }
+
+    // Delete a bookmark
+  function deleteBookmark(section, index) {
+    browserAPI.storage.sync.get('bookmarkData', (data) => {
+      const bookmarkData = data.bookmarkData || { sections: {} };
+      if (bookmarkData.sections[section]) {
+        bookmarkData.sections[section].splice(index, 1);
+        if (bookmarkData.sections[section].length === 0) {
+          delete bookmarkData.sections[section];
+        }
+        browserAPI.storage.sync.set({ bookmarkData }, () => {
+          loadData();
+        });
+      }
+    });
+  }
   
     // Show/hide new section input
     sectionSelect.addEventListener('change', () => {

@@ -1,55 +1,131 @@
-
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Smart Bookmark Saver</title>
-        <style>
-          body {
-            width: 300px;
-            padding: 10px;
-            font-family: Arial, sans-serif;
-          }
-          input, select, button {
-            margin: 5px 0;
-            padding: 5px;
-            width: 100%;
-            box-sizing: border-box;
-          }
-          input[readonly] {
-            background-color: #f0f0f0;
-            cursor: not-allowed;
-          }
-          button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-          }
-          button:hover {
-            background-color: #45a049;
-          }
-          #bookmarkList {
-            max-height: 200px;
-            overflow-y: auto;
-          }
-          .bookmark-item {
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-          }
-        </style>
-      </head>
+<head>
+  <title>Smart Bookmark Saver</title>
+  <style>
+    body {
+      width: 320px;
+      padding: 15px;
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h3 {
+      margin: 0 0 15px;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 0.9em;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1abc9c;
+    }
+    select {
+      background: #fff;
+      cursor: pointer;
+    }
+    #newSection {
+      display: none;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #1abc9c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: #16a085;
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    h4 {
+      margin: 15px 0 10px;
+      font-size: 1em;
+      color: #2c3e50;
+    }
+    #bookmarkList {
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .bookmark-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+      transition: background 0.2s;
+    }
+    .bookmark-item:nth-child(even) {
+      background: #f5f5f5;
+    }
+    .bookmark-item:hover {
+      background: #e8ecef;
+    }
+    .bookmark-item a {
+      color: #2980b9;
+      text-decoration: none;
+      font-size: 0.85em;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bookmark-item a:hover {
+      text-decoration: underline;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 4px 8px;
+      font-size: 0.75em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
 <body>
-  <h3>Smart Bookmark Saver</h3>
-  <!-- <input type="text" id="bookmarkUrl" placeholder="Current page URL" readonly> -->
-  <input type="text" id="bookmarkTitle" placeholder="Bookmark Title">
-  <select id="sectionSelect">
-    <option value="">Select Section</option>
-    <option value="new">New Section...</option>
-  </select>
-  <input type="text" id="newSection" placeholder="New Section Name" style="display: none;">
-  <button id="saveBookmark">Save Bookmark</button>
-  <h4>Saved Bookmarks</h4>
-  <div id="bookmarkList"></div>
+  <div class="container">
+    <h3>Smart Bookmark Saver</h3>
+    <input type="text" id="bookmarkTitle" placeholder="Bookmark Title" aria-label="Bookmark Title">
+    <select id="sectionSelect" aria-label="Select Bookmark Section">
+      <option value="">Select Section</option>
+      <option value="new">New Section...</option>
+    </select>
+    <input type="text" id="newSection" placeholder="New Section Name" aria-label="New Section Name">
+    <button id="saveBookmark">Save Bookmark</button>
+    <h4>Saved Bookmarks</h4>
+    <div id="bookmarkList"></div>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>
