@@ -72,45 +72,52 @@
       padding: 0;
     }
     .bookmark-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-      background: #fafafa;
-      transition: background 0.2s;
-    }
-    .bookmark-item:nth-child(even) {
-      background: #f5f5f5;
-    }
-    .bookmark-item:hover {
-      background: #e8ecef;
-    }
-    .bookmark-item a {
-      color: #2980b9;
-      text-decoration: none;
-      font-size: 0.85em;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .bookmark-item a:hover {
-      text-decoration: underline;
-    }
-    .delete-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      padding: 4px 8px;
-      font-size: 0.75em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .delete-btn:hover {
-      background: #c0392b;
-    }
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+  transition: background 0.2s;
+}
+.bookmark-item:nth-child(even) {
+  background: #f5f5f5;
+}
+.bookmark-item:hover {
+  background: #e8ecef;
+}
+.bookmark-item a {
+  color: #2980b9;
+  text-decoration: none;
+  font-size: 0.85em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.bookmark-item a:hover {
+  text-decoration: underline;
+}
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 0.75em;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  width: 60px; /* Fixed width to prevent overlap */
+}
+.delete-btn:hover {
+  background: #c0392b;
+}
+
+#bookmarkList > div {
+  margin-bottom: 12px;
+}
   </style>
 </head>
 <body>
