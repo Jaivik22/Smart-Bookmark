@@ -10,5 +10,12 @@
     },
     "icons": {
       "128": "assets/bookmark.png"
-    }
+    },
+    "browser_specific_settings": {
+  "gecko": {
+    "id": "bookmark-saver@jaivik",
+    "strict_min_version": "57.0"
+  }
+}
+
   }
