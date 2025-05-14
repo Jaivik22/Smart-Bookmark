@@ -14,11 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSyncCode() {
     browserAPI.storage.sync.get('syncCode', (data) => {
       if (data.syncCode) {
-        codeDisplay.textContent = `Click To Sync Your Bookmarks with: ${data.syncCode}`;
+        codeDisplay.textContent = `Sync Your Bookmarks with: ${data.syncCode}`;
       } else {
         const newCode = generateRandomCode();
         browserAPI.storage.sync.set({ syncCode: newCode }, () => {
-          codeDisplay.textContent = `Click To Sync Your Bookmarks with: ${newCode}`;
+          codeDisplay.textContent = `Sync Your Bookmarks with: ${newCode}`;
         });
       }
     });

@@ -1,41 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sync Code</title>
+  <title>Sync Bookmarks</title>
   <style>
     body {
-      padding: 20px;
+      width: 320px;
+      padding: 15px;
       margin: 0;
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #f5f7fa;
       color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
     }
     .container {
       background: white;
       border-radius: 8px;
-      padding: 20px;
+      padding: 15px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
       text-align: center;
     }
     h3 {
-      margin: 0 0 20px;
-      font-size: 1.4em;
+      margin: 0 0 15px;
+      font-size: 1.2em;
       color: #2c3e50;
     }
     input {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
+      padding: 8px;
+      margin: 8px 0;
       border: 1px solid #ddd;
       border-radius: 4px;
       box-sizing: border-box;
-      font-size: 1em;
+      font-size: 0.9em;
       transition: border-color 0.2s;
     }
     input:focus {
@@ -52,7 +47,7 @@
       font-size: 0.9em;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
-      margin: 10px 0;
+      margin: 8px 0;
     }
     button:hover {
       background: #16a085;
@@ -63,9 +58,14 @@
     }
     #codeDisplay {
       margin-top: 20px;
-      font-size: 1em;
+      font-size: 1.2em;
       color: #2c3e50;
-      word-break: break-all;
+      word-break: break-word;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    #codeDisplay:hover {
+      color: #1abc9c;
     }
   </style>
 </head>
@@ -74,8 +74,7 @@
     <h3>Sync Bookmarks</h3>
     <input type="text" id="syncCode" placeholder="Enter Sync Code" aria-label="Sync Code">
     <button id="submitCode">Submit</button>
-    <!-- <button id="generateCode">Create New Sync Code</button> -->
-    <div id="codeDisplay"></div>
+    <button id="codeDisplay"></button>
   </div>
   <script src="sync.js"></script>
 </body>
