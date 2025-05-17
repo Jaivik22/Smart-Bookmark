@@ -14,22 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSyncCode() {
     browserAPI.storage.sync.get('syncCode', (data) => {
       if (data.syncCode) {
-        codeDisplay.textContent = `Sync Your Bookmarks with: ${data.syncCode}`;
+        codeDisplay.textContent = `Your Bookmarksa are synced to: ${data.syncCode}`;
       } else {
         const newCode = generateRandomCode();
         browserAPI.storage.sync.set({ syncCode: newCode }, () => {
-          codeDisplay.textContent = `Sync Your Bookmarks with: ${newCode}`;
+          codeDisplay.textContent = `Your Bookmarks are synced to: ${newCode}`;
         });
       }
     });
   }
 
-  // Handle code display click to generate new code
-  codeDisplay.addEventListener('click', () => {
-    browserAPI.storage.sync.get('syncCode', (data) => {
-        codeDisplay.textContent = `Your Bookmarks Are Synced With: ${data.syncCode}`;
-    });
-  });
+  // // Handle code display click to generate new code
+  // codeDisplay.addEventListener('click', () => {
+  //   browserAPI.storage.sync.get('syncCode', (data) => {
+  //       codeDisplay.textContent = `Your Bookmarks Are Synced With: ${data.syncCode}`;
+  //   });
+  // });
 
   // Handle code submission
   submitCodeBtn.addEventListener('click', () => {

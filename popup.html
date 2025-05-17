@@ -65,7 +65,7 @@
     .sync-btn {
       position: absolute;
       top: 15px;
-      left: 15px;
+      right: 15px;
       width: 40px;
       height: 40px;
       padding: 0;
@@ -159,13 +159,10 @@
     #codeDisplay {
       margin-top: 20px;
       font-size: 1em;
-      color: white;
+      color: #3498db;
       word-break: break-all;
       cursor: pointer;
       transition: color 0.2s;
-    }
-    #codeDisplay:hover {
-      /* color: #1abc9c; */
     }
     #bookmarkContainer {
       display: block;
@@ -188,6 +185,7 @@
     </select>
     <input type="text" id="newSection" placeholder="New Section Name" aria-label="New Section Name">
     <button id="saveBookmark">Save Bookmark</button>
+    <div id="codeDisplay"></div>
     <h4>Saved Bookmarks</h4>
     <div id="bookmarkList"></div>
   </div>
@@ -195,7 +193,7 @@
     <h3>Sync Bookmarks</h3>
     <input type="text" id="syncCode" placeholder="Enter Sync Code" aria-label="Sync Code">
     <button id="submitCode">Submit</button>
-    <button id="codeDisplay"></button>
+    <!-- <button id="codeDisplay"></button> -->
   </div>
   <script src="popup.js"></script>
   <script src="sync.js"></script>
