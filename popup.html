@@ -195,7 +195,10 @@
     <button id="submitCode">Submit</button>
     <!-- <button id="codeDisplay"></button> -->
   </div>
-  <script src="popup.js"></script>
+  <!-- Your popup content -->
+  <script type="module" src="/dist/popup-bundle.js"></script>
+  <script type="module" src="/dist/firebase-bundle.js"></script>
+  <!-- Include sync.js only if it’s bundled or a non-module script -->
   <script src="sync.js"></script>
 </body>
 </html>
