@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         popup: './popup.js', // Include popup.js as an entry point
         firebase: './src/firebase.js',
+        sync: './sync.js'
       },
       output: {
         entryFileNames: '[name]-bundle.js', // Generates firebase-bundle.js and popup-bundle.js
