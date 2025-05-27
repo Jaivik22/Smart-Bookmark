@@ -195,7 +195,7 @@
 import { db } from './src/firebase.js'; // Import Firebase configuration
 import { collection, doc, setDoc, getDoc, getDocs, arrayUnion, deleteDoc } from 'firebase/firestore';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async() => {
   const bookmarkTitle = document.getElementById('bookmarkTitle');
   const sectionSelect = document.getElementById('sectionSelect');
   const newSectionInput = document.getElementById('newSection');
@@ -209,8 +209,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const browserAPI = window.browser || window.chrome;
 
-  // Assume usercode is available (e.g., from Firebase Authentication)
-  const usercode = '1234'; // Replace with actual user ID from authentication
+ // Fetch usercode from browser.storage.sync
+  let usercode = '';
+  try {
+    const data = await new Promise((resolve) => {
+      browserAPI.storage.sync.get('syncCode', resolve);
+    });
+    usercode = data.syncCode || 'default_user'; // Fallback if no sync code
+    console.log('Usercode set to:', usercode);
+  } catch (error) {
+    console.error('Error fetching sync code:', error);
+    usercode = 'default_user';
+    // alert('Failed to fetch sync code. Using default user ID.');
+
+  }
 
   // Fetch current tab URL and title
   browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -278,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (error) {
       console.error('Error loading data from Firebase:', error);
-      alert('Failed to load bookmarks. Please try again.');
     }
   }
 
@@ -299,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error deleting bookmark:', error);
-      alert('Failed to delete bookmark. Please try again.');
     }
   }
 
@@ -327,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
       loadData();
     } catch (error) {
       console.error('Error saving bookmark:', error);
-      alert('Failed to save bookmark. Please try again.');
     }
   }
 
@@ -338,14 +347,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let section = sectionSelect.value;
 
     if (!url || !section) {
-      alert('Please select a section');
+       console.log('Please select a section');
       return;
     }
 
     if (section === 'new') {
       section = newSectionInput.value.trim();
       if (!section) {
-        alert('Please enter a section name');
+        console.log('Please enter a section name');
         return;
       }
     }

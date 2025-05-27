@@ -31,17 +31,35 @@ document.addEventListener('DOMContentLoaded', () => {
   //   });
   // });
 
+  // // Handle code submission
+  // submitCodeBtn.addEventListener('click', () => {
+  //   const code = syncCodeInput.value.trim();
+  //   if (!code || !/^\d{6}$/.test(code)) {
+  //     alert('Please enter a valid 6-digit code');
+  //     return;
+  //   }
+  //   // Placeholder for sync logic
+  //   alert(`Submitted code: ${code}`);
+  //   syncCodeInput.value = '';
+  // });
+
   // Handle code submission
   submitCodeBtn.addEventListener('click', () => {
     const code = syncCodeInput.value.trim();
     if (!code || !/^\d{6}$/.test(code)) {
-      alert('Please enter a valid 6-digit code');
+      console.log('Please enter a valid 6-digit code');
       return;
     }
-    // Placeholder for sync logic
-    alert(`Submitted code: ${code}`);
-    syncCodeInput.value = '';
+    // Store the submitted code as the sync code
+    browserAPI.storage.sync.set({ syncCode: code }, () => {
+      console.log('Sync code updated to:', code);
+      codeDisplay.textContent = `Your Bookmarks are synced to: ${code}`;
+      // alert(`Bookmarks now synced with code: ${code}`);
+      console.log('Bookmarks now synced with code: '+code);
+      syncCodeInput.value = '';
+    });
   });
+
 
   // Initial load
   loadSyncCode();
