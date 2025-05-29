@@ -11,24 +11,40 @@ document.addEventListener('DOMContentLoaded', async() => {
   const backArrow = document.getElementById('backArrow');
   const bookmarkContainer = document.getElementById('bookmarkContainer');
   const syncContainer = document.getElementById('syncContainer');
+    const codeDisplay = document.getElementById('codeDisplay');
+
   let currentUrl = '';
 
   const browserAPI = window.browser || window.chrome;
 
- // Fetch usercode from browser.storage.sync
-  let usercode = '';
-  try {
-    const data = await new Promise((resolve) => {
-      browserAPI.storage.sync.get('syncCode', resolve);
-    });
-    usercode = data.syncCode; // Fallback if no sync code
-    console.log('Usercode set to:', usercode);
-  } catch (error) {
-    console.error('Error fetching sync code:', error);
-    // usercode = 'default_user';
-    // alert('Failed to fetch sync code. Using default user ID.');
+ // Ensure sync code exists, generate if missing
+let usercode = '';
+try {
+  const data = await new Promise((resolve) => {
+    browserAPI.storage.sync.get('syncCode', resolve);
+  });
 
+  if (data.syncCode) {
+    usercode = data.syncCode;
+    console.log('Usercode already exists:', usercode);
+
+  } else {
+    // Generate new code
+    codeDisplay.textContent = 'No sync code set. Please wait...';
+    usercode = Math.floor(100000 + Math.random() * 900000).toString();
+    await new Promise((resolve) => {
+      browserAPI.storage.sync.set({ syncCode: usercode }, resolve);
+    });
+    console.log('Generated and saved new usercode:', usercode);
+    // Create Firebase user
+    await createUserInFirebase(usercode);
   }
+  // codeDisplay.textContent = `Your Bookmarks are synced to: ${data.syncCode}`;
+
+} catch (error) {
+  console.error('Error handling sync code:', error);
+}
+
 
   // Fetch current tab URL and title
   browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -44,9 +60,25 @@ document.addEventListener('DOMContentLoaded', async() => {
     }
   });
 
+  async function createUserInFirebase(code) {
+  try {
+    const userRef = doc(db, 'users', code);
+    await setDoc(userRef, {
+      createdAt: new Date().toISOString(),
+      lastActive: new Date().toISOString()
+    }, { merge: true });
+    console.log('User document created in Firebase:', code);
+  } catch (error) {
+    console.error('Error creating user in Firebase:', error);
+  }
+}
+
+
   // Load sections and bookmarks from Firebase
   async function loadData() {
     try {
+        codeDisplay.textContent = `Your Bookmarks are synced to: ${usercode}`;
+
       // Fetch sections from Firebase
       const sectionsSnapshot = await getDocs(collection(db, 'users', usercode, 'topics'));
       const sections = [];
@@ -189,6 +221,8 @@ document.addEventListener('DOMContentLoaded', async() => {
 });
 
 
+
+//old code
 // import { db } from './src/firebase.js';
 // import { collection, doc, setDoc, getDoc, getDocs, arrayUnion, deleteDoc } from 'firebase/firestore';
 
