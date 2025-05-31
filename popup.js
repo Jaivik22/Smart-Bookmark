@@ -1,7 +1,7 @@
-import { db } from './src/firebase.js'; // Import Firebase configuration
+import { db } from './src/firebase.js';
 import { collection, doc, setDoc, getDoc, getDocs, arrayUnion, deleteDoc } from 'firebase/firestore';
 
-document.addEventListener('DOMContentLoaded', async() => {
+document.addEventListener('DOMContentLoaded', async () => {
   const bookmarkTitle = document.getElementById('bookmarkTitle');
   const sectionSelect = document.getElementById('sectionSelect');
   const newSectionInput = document.getElementById('newSection');
@@ -11,40 +11,65 @@ document.addEventListener('DOMContentLoaded', async() => {
   const backArrow = document.getElementById('backArrow');
   const bookmarkContainer = document.getElementById('bookmarkContainer');
   const syncContainer = document.getElementById('syncContainer');
-    const codeDisplay = document.getElementById('codeDisplay');
+  const codeDisplay = document.getElementById('codeDisplay');
+  const loader = document.getElementById('loader');
+  const toast = document.getElementById('toast');
 
   let currentUrl = '';
-
   const browserAPI = window.browser || window.chrome;
 
- // Ensure sync code exists, generate if missing
-let usercode = '';
-try {
-  const data = await new Promise((resolve) => {
-    browserAPI.storage.sync.get('syncCode', resolve);
-  });
-
-  if (data.syncCode) {
-    usercode = data.syncCode;
-    console.log('Usercode already exists:', usercode);
-
-  } else {
-    // Generate new code
-    codeDisplay.textContent = 'No sync code set. Please wait...';
-    usercode = Math.floor(100000 + Math.random() * 900000).toString();
-    await new Promise((resolve) => {
-      browserAPI.storage.sync.set({ syncCode: usercode }, resolve);
-    });
-    console.log('Generated and saved new usercode:', usercode);
-    // Create Firebase user
-    await createUserInFirebase(usercode);
+  // Toast notification function
+  function showToast(message, type = 'success') {
+    toast.textContent = message;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => {
+      toast.className = 'toast';
+    }, 3000);
   }
-  // codeDisplay.textContent = `Your Bookmarks are synced to: ${data.syncCode}`;
 
-} catch (error) {
-  console.error('Error handling sync code:', error);
-}
+  // Toggle loading state
+  function toggleLoading(isLoading) {
+    loader.style.display = isLoading ? 'block' : 'none';
+    bookmarkContainer.classList.toggle('loading', isLoading);
+  }
 
+  // Ensure sync code exists, generate if missing
+  let usercode = '';
+  try {
+    toggleLoading(true);
+    const data = await new Promise((resolve) => {
+      browserAPI.storage.sync.get('syncCode', resolve);
+    });
+
+    if (data.syncCode) {
+      usercode = data.syncCode;
+      codeDisplay.textContent = `Synced to: ${usercode}`;
+    } else {
+      codeDisplay.textContent = 'Generating sync code...';
+      let isUnique = false;
+      while (!isUnique) {
+        const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const userRef = doc(db, 'users', generatedCode);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          usercode = generatedCode;
+          await new Promise((resolve) => {
+            browserAPI.storage.sync.set({ syncCode: usercode }, resolve);
+          });
+          await createUserInFirebase(usercode);
+          isUnique = true;
+          codeDisplay.textContent = `Synced to: ${usercode}`;
+          showToast('Sync code generated successfully!');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error handling sync code:', error);
+    showToast('Failed to initialize sync code', 'error');
+  } finally {
+    toggleLoading(false);
+  }
 
   // Fetch current tab URL and title
   browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -57,34 +82,34 @@ try {
       console.error('Failed to fetch active tab data:', tabs);
       bookmarkTitle.value = 'Untitled';
       currentUrl = '';
+      showToast('Failed to fetch tab data', 'error');
     }
   });
 
   async function createUserInFirebase(code) {
-  try {
-    const userRef = doc(db, 'users', code);
-    await setDoc(userRef, {
-      createdAt: new Date().toISOString(),
-      lastActive: new Date().toISOString()
-    }, { merge: true });
-    console.log('User document created in Firebase:', code);
-  } catch (error) {
-    console.error('Error creating user in Firebase:', error);
+    try {
+      const userRef = doc(db, 'users', code);
+      await setDoc(userRef, {
+        createdAt: new Date().toISOString(),
+        lastActive: new Date().toISOString()
+      }, { merge: true });
+      console.log('User document created in Firebase:', code);
+    } catch (error) {
+      console.error('Error creating user in Firebase:', error);
+      showToast('Failed to create user in Firebase', 'error');
+      throw error;
+    }
   }
-}
-
 
   // Load sections and bookmarks from Firebase
   async function loadData() {
     try {
-        codeDisplay.textContent = `Your Bookmarks are synced to: ${usercode}`;
-
-      // Fetch sections from Firebase
+      toggleLoading(true);
+      codeDisplay.textContent = `Synced to: ${usercode}`;
       const sectionsSnapshot = await getDocs(collection(db, 'users', usercode, 'topics'));
       const sections = [];
       sectionsSnapshot.forEach(doc => sections.push(doc.id));
 
-      // Populate dropdown
       sectionSelect.innerHTML = '<option value="">Select Section</option><option value="new">New Section...</option>';
       sections.forEach(section => {
         const option = document.createElement('option');
@@ -93,7 +118,6 @@ try {
         sectionSelect.appendChild(option);
       });
 
-      // Fetch and display bookmarks
       bookmarkList.innerHTML = '';
       for (const section of sections) {
         const sectionDoc = await getDoc(doc(db, 'users', usercode, 'topics', section));
@@ -111,14 +135,13 @@ try {
           const bookmarkDiv = document.createElement('div');
           bookmarkDiv.className = 'bookmark-item';
           bookmarkDiv.innerHTML = `
-            <a href="${bookmark.url}" target="_blank">${title}</a>
-            <button class="delete-btn" data-section="${section}" data-index="${index}">Delete</button>`;
+            <a href="${bookmark.url}" target="_blank" title="${title}">${title}</a>
+            <button class="delete-btn" data-section="${section}" data-index="${index}" aria-label="Delete ${title}">Delete</button>`;
           sectionDiv.appendChild(bookmarkDiv);
         });
         bookmarkList.appendChild(sectionDiv);
       }
 
-      // Bind delete buttons
       document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const section = e.target.dataset.section;
@@ -126,28 +149,39 @@ try {
           deleteBookmark(section, index);
         });
       });
+
+      showToast('Bookmarks loaded successfully!');
     } catch (error) {
       console.error('Error loading data from Firebase:', error);
+      showToast('Failed to load bookmarks', 'error');
+    } finally {
+      toggleLoading(false);
     }
   }
 
   // Delete a bookmark
   async function deleteBookmark(section, index) {
     try {
+      toggleLoading(true);
       const sectionRef = doc(db, 'users', usercode, 'topics', section);
       const sectionDoc = await getDoc(sectionRef);
       if (sectionDoc.exists()) {
         const bookmarks = sectionDoc.data().urls || [];
         bookmarks.splice(index, 1);
         if (bookmarks.length === 0) {
-          await deleteDoc(sectionRef); // Delete section if no bookmarks remain
+          await deleteDoc(sectionRef);
+          showToast(`Section "${section}" deleted successfully!`);
         } else {
           await setDoc(sectionRef, { urls: bookmarks }, { merge: true });
+          showToast('Bookmark deleted successfully!');
         }
-        loadData();
+        await loadData();
       }
     } catch (error) {
       console.error('Error deleting bookmark:', error);
+      showToast('Failed to delete bookmark', 'error');
+    } finally {
+      toggleLoading(false);
     }
   }
 
@@ -159,6 +193,7 @@ try {
   // Save bookmark to Firebase
   async function saveBookmarkToFirebase(title, url, section) {
     try {
+      toggleLoading(true);
       const sectionRef = doc(db, 'users', usercode, 'topics', section);
       await setDoc(
         sectionRef,
@@ -172,32 +207,36 @@ try {
       sectionSelect.value = '';
       newSectionInput.value = '';
       newSectionInput.style.display = 'none';
-      loadData();
+      showToast('Bookmark saved successfully!');
+      await loadData();
     } catch (error) {
       console.error('Error saving bookmark:', error);
+      showToast('Failed to save bookmark', 'error');
+    } finally {
+      toggleLoading(false);
     }
   }
 
   // Save bookmark
-  saveBookmarkBtn.addEventListener('click', () => {
+  saveBookmarkBtn.addEventListener('click', async () => {
     const url = currentUrl;
     const title = bookmarkTitle.value.trim() || url || 'Untitled';
     let section = sectionSelect.value;
 
     if (!url || !section) {
-       console.log('Please select a section');
+      showToast('Please select a section', 'error');
       return;
     }
 
     if (section === 'new') {
       section = newSectionInput.value.trim();
       if (!section) {
-        console.log('Please enter a section name');
+        showToast('Please enter a section name', 'error');
         return;
       }
     }
-    console.log("created section: "+section);
-    saveBookmarkToFirebase(title, url, section);
+    console.log("Created section: " + section);
+    await saveBookmarkToFirebase(title, url, section);
   });
 
   // Toggle to sync interface
@@ -217,16 +256,16 @@ try {
   });
 
   // Initial load
-  loadData();
+  await loadData();
 });
 
 
 
-//old code
-// import { db } from './src/firebase.js';
+
+// import { db } from './src/firebase.js'; // Import Firebase configuration
 // import { collection, doc, setDoc, getDoc, getDocs, arrayUnion, deleteDoc } from 'firebase/firestore';
 
-// document.addEventListener('DOMContentLoaded', async () => {
+// document.addEventListener('DOMContentLoaded', async() => {
 //   const bookmarkTitle = document.getElementById('bookmarkTitle');
 //   const sectionSelect = document.getElementById('sectionSelect');
 //   const newSectionInput = document.getElementById('newSection');
@@ -236,58 +275,66 @@ try {
 //   const backArrow = document.getElementById('backArrow');
 //   const bookmarkContainer = document.getElementById('bookmarkContainer');
 //   const syncContainer = document.getElementById('syncContainer');
+//     const codeDisplay = document.getElementById('codeDisplay');
+
 //   let currentUrl = '';
+
 //   const browserAPI = window.browser || window.chrome;
 
-//   // Generate random 6-digit code
-//   function generateRandomCode() {
-//     return Math.floor(100000 + Math.random() * 900000).toString();
-//   }
+//  // Ensure sync code exists, generate if missing
+// let usercode = '';
+// try {
+//   const data = await new Promise((resolve) => {
+//     browserAPI.storage.sync.get('syncCode', resolve);
+//   });
 
-//   // Create user in Firebase
-//   async function createUserInFirebase(code) {
-//     try {
-//       const userRef = doc(db, 'users', code);
-//       await setDoc(userRef, {
-//         createdAt: new Date().toISOString(),
-//         lastActive: new Date().toISOString()
-//       }, { merge: true });
-//       console.log('User document created for code:', code);
-//     } catch (error) {
-//       console.error('Error creating user document:', error);
-//       throw error;
-//     }
-//   }
+//   if (data.syncCode) {
+//     usercode = data.syncCode;
+//     console.log('Usercode already exists:', usercode);
 
-//   // Initialize usercode
-//   async function initializeUsercode() {
-//     try {
-//       const data = await new Promise((resolve) => {
-//         browserAPI.storage.sync.get('syncCode', resolve);
-//       });
-//       let usercode = data.syncCode;
-//       if (!usercode) {
-//         usercode = generateRandomCode();
-//         await createUserInFirebase(usercode);
+//   } else {
+//     // Generate new code
+//     codeDisplay.textContent = 'No sync code set. Please wait...';
+//     // usercode = Math.floor(100000 + Math.random() * 900000).toString();
+//     // await new Promise((resolve) => {
+//     //   browserAPI.storage.sync.set({ syncCode: usercode }, resolve);
+//     // });
+//     // console.log('Generated and saved new usercode:', usercode);
+//     // // Create Firebase user
+//     // await createUserInFirebase(usercode);
+//     let isUnique = false;
+//     while (!isUnique) {
+//       // Step 1: Generate 6-digit random code
+//       const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+//       // Step 2: Check if it exists in Firebase
+//       const userRef = doc(db, 'users', generatedCode);
+//       const userSnap = await getDoc(userRef);
+
+//       if (!userSnap.exists()) {
+//         // Step 3: Unique code found
+//         usercode = generatedCode;
+
+//         // Step 4: Save in browser storage
 //         await new Promise((resolve) => {
 //           browserAPI.storage.sync.set({ syncCode: usercode }, resolve);
 //         });
-//         console.log('Generated and set new sync code:', usercode);
+
+//         // Step 5: Create user in Firebase
+//         await createUserInFirebase(usercode);
+//         isUnique = true;
+//         console.log('Generated and saved new unique usercode:', usercode);
 //       } else {
-//         // Verify user exists in Firebase
-//         const userRef = doc(db, 'users', usercode);
-//         const userSnap = await getDoc(userRef);
-//         if (!userSnap.exists()) {
-//           await createUserInFirebase(usercode);
-//         }
+//         console.log('Generated code already exists, generating new one...');
 //       }
-//       return usercode;
-//     } catch (error) {
-//       console.error('Error initializing usercode:', error);
-//       alert('Failed to initialize sync code. Please try again.');
-//       return null;
 //     }
 //   }
+//   // codeDisplay.textContent = `Your Bookmarks are synced to: ${data.syncCode}`;
+
+// } catch (error) {
+//   console.error('Error handling sync code:', error);
+// }
+
 
 //   // Fetch current tab URL and title
 //   browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -303,9 +350,25 @@ try {
 //     }
 //   });
 
+//   async function createUserInFirebase(code) {
+//   try {
+//     const userRef = doc(db, 'users', code);
+//     await setDoc(userRef, {
+//       createdAt: new Date().toISOString(),
+//       lastActive: new Date().toISOString()
+//     }, { merge: true });
+//     console.log('User document created in Firebase:', code);
+//   } catch (error) {
+//     console.error('Error creating user in Firebase:', error);
+//   }
+// }
+
+
 //   // Load sections and bookmarks from Firebase
-//   async function loadData(usercode) {
+//   async function loadData() {
 //     try {
+//         codeDisplay.textContent = `Your Bookmarks are synced to: ${usercode}`;
+
 //       // Fetch sections from Firebase
 //       const sectionsSnapshot = await getDocs(collection(db, 'users', usercode, 'topics'));
 //       const sections = [];
@@ -350,7 +413,7 @@ try {
 //         btn.addEventListener('click', (e) => {
 //           const section = e.target.dataset.section;
 //           const index = parseInt(e.target.dataset.index);
-//           deleteBookmark(section, index, usercode);
+//           deleteBookmark(section, index);
 //         });
 //       });
 //     } catch (error) {
@@ -359,7 +422,7 @@ try {
 //   }
 
 //   // Delete a bookmark
-//   async function deleteBookmark(section, index, usercode) {
+//   async function deleteBookmark(section, index) {
 //     try {
 //       const sectionRef = doc(db, 'users', usercode, 'topics', section);
 //       const sectionDoc = await getDoc(sectionRef);
@@ -371,7 +434,7 @@ try {
 //         } else {
 //           await setDoc(sectionRef, { urls: bookmarks }, { merge: true });
 //         }
-//         loadData(usercode);
+//         loadData();
 //       }
 //     } catch (error) {
 //       console.error('Error deleting bookmark:', error);
@@ -384,7 +447,7 @@ try {
 //   });
 
 //   // Save bookmark to Firebase
-//   async function saveBookmarkToFirebase(title, url, section, usercode) {
+//   async function saveBookmarkToFirebase(title, url, section) {
 //     try {
 //       const sectionRef = doc(db, 'users', usercode, 'topics', section);
 //       await setDoc(
@@ -399,20 +462,20 @@ try {
 //       sectionSelect.value = '';
 //       newSectionInput.value = '';
 //       newSectionInput.style.display = 'none';
-//       loadData(usercode);
+//       loadData();
 //     } catch (error) {
 //       console.error('Error saving bookmark:', error);
 //     }
 //   }
 
 //   // Save bookmark
-//   saveBookmarkBtn.addEventListener('click', async () => {
+//   saveBookmarkBtn.addEventListener('click', () => {
 //     const url = currentUrl;
 //     const title = bookmarkTitle.value.trim() || url || 'Untitled';
 //     let section = sectionSelect.value;
 
 //     if (!url || !section) {
-//       console.log('Please select a section');
+//        console.log('Please select a section');
 //       return;
 //     }
 
@@ -423,11 +486,8 @@ try {
 //         return;
 //       }
 //     }
-//     console.log('Created section:', section);
-//     const usercode = await initializeUsercode();
-//     if (usercode) {
-//       saveBookmarkToFirebase(title, url, section, usercode);
-//     }
+//     console.log("created section: "+section);
+//     saveBookmarkToFirebase(title, url, section);
 //   });
 
 //   // Toggle to sync interface
@@ -446,9 +506,6 @@ try {
 //     backArrow.style.display = 'none';
 //   });
 
-//   // Initialize and load data
-//   const usercode = await initializeUsercode();
-//   if (usercode) {
-//     await loadData(usercode);
-//   }
+//   // Initial load
+//   loadData();
 // });
